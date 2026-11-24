@@ -1,0 +1,858 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>מבדק אינטראקטיבי במתמטיקה - ווקטורים</title>
+
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Google Fonts: Rubik & Heebo for modern Hebrew typography -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Heebo:wght@400;500;600;700&family=Rubik:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+    <!-- KaTeX CSS & JS for Math Rendering -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/contrib/auto-render.min.js"></script>
+
+    <!-- Custom Tailwind Configuration -->
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Rubik', 'Heebo', 'sans-serif'],
+                    },
+                    colors: {
+                        brand: {
+                            50: '#f0f7ff',
+                            100: '#e0effe',
+                            500: '#2563eb',
+                            600: '#1d4ed8',
+                            700: '#1e40af',
+                            800: '#1e3a8a',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        body {
+            font-family: 'Rubik', 'Heebo', sans-serif;
+            background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+            min-height: 100vh;
+        }
+
+        /* Ensure Math formulas in inline containers retain LTR direction */
+        .katex-display, .katex {
+            direction: ltr !important;
+            unicode-bidi: isolate;
+            display: inline-block;
+        }
+        
+        .math-container {
+            direction: ltr !important;
+            display: inline-block;
+        }
+
+        /* Pulse and transition effects */
+        .option-btn {
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .option-btn:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(37, 99, 235, 0.12);
+        }
+
+        /* Smooth question card transition */
+        @keyframes slideFadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .animate-question-enter {
+            animation: slideFadeIn 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+
+        /* Custom scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #f1f5f9;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
+        }
+    </style>
+</head>
+<body class="text-slate-800 antialiased flex flex-col justify-between">
+
+    <!-- Header Banner -->
+    <header class="bg-white border-b border-slate-200 sticky top-0 z-30 shadow-sm">
+        <div class="max-w-4xl mx-auto px-4 py-3 flex items-center justify-between">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-xl bg-brand-600 text-white flex items-center justify-center font-bold text-xl shadow-md">
+                    $\vec{v}$
+                </div>
+                <div>
+                    <h1 class="text-lg md:text-xl font-bold text-slate-900 leading-tight">מבדק במתמטיקה: ווקטורים</h1>
+                    <p class="text-xs text-slate-500">רמת 4-5 יחידות לימוד | בגרות</p>
+                </div>
+            </div>
+            
+            <div id="top-score-badge" class="flex items-center gap-2 bg-slate-100 px-3 py-1.5 rounded-lg border border-slate-200 font-medium text-sm">
+                <span class="text-slate-500">ניקוד:</span>
+                <span id="score-counter" class="text-brand-600 font-bold text-base">0</span>
+                <span class="text-slate-400">/ 100</span>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Container -->
+    <main class="max-w-3xl mx-auto px-4 py-6 md:py-10 w-full flex-grow">
+        
+        <!-- START / WELCOME CARD (Hidden when quiz starts) -->
+        <div id="welcome-card" class="bg-white rounded-2xl p-6 md:p-8 shadow-xl border border-slate-100 text-center space-y-6 transition-all duration-300">
+            <div class="w-20 h-20 bg-brand-50 text-brand-600 rounded-full flex items-center justify-center mx-auto text-3xl font-extrabold shadow-inner">
+                $\vec{u} \cdot \vec{v}$
+            </div>
+            
+            <div class="space-y-2">
+                <h2 class="text-2xl md:text-3xl font-bold text-slate-900">ברוכים הבאים למבדק הווקטורים</h2>
+                <p class="text-slate-600 max-w-lg mx-auto text-sm md:text-base leading-relaxed">
+                    מבדק זה מכיל 10 שאלות אמריקאיות המכסות נושאי ליבה: חיבור וחיסור ווקטורים, מכפלה סקלרית, אורך ווקטור, זווית בין ווקטורים, ניצבות וישרים/מישורים במרחב.
+                </p>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 text-right bg-slate-50 p-4 rounded-xl border border-slate-200/60 text-xs md:text-sm">
+                <div class="flex items-center gap-2">
+                    <span class="w-2 h-2 rounded-full bg-brand-500"></span>
+                    <span>10 שאלות מגוונות</span>
+                </div>
+                <div class="flex items-center gap-2">
+                    <span class="w-2 h-2 rounded-full bg-amber-500"></span>
+                    <span>רמז לכל שאלה</span>
+                </div>
+                <div class="flex items-center gap-2">
+                    <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
+                    <span>פתרון מלא ומפורט</span>
+                </div>
+            </div>
+
+            <button onclick="startQuiz()" class="w-full sm:w-auto px-8 py-3.5 bg-brand-600 hover:bg-brand-700 text-white font-semibold rounded-xl shadow-lg shadow-brand-500/25 transition duration-200 text-base md:text-lg">
+                התחל את המבדק עכשיו
+            </button>
+        </div>
+
+        <!-- QUIZ CONTAINER (Hidden initially) -->
+        <div id="quiz-card" class="hidden space-y-5">
+            
+            <!-- Progress Bar Card -->
+            <div class="bg-white rounded-xl p-4 shadow-sm border border-slate-200/80 flex flex-col gap-2">
+                <div class="flex justify-between items-center text-xs md:text-sm font-semibold text-slate-600">
+                    <span id="question-progress-text">שאלה 1 מתוך 10</span>
+                    <span id="progress-percent" class="text-brand-600">10%</span>
+                </div>
+                <div class="w-full bg-slate-100 rounded-full h-2.5 overflow-hidden">
+                    <div id="progress-bar-fill" class="bg-brand-600 h-2.5 rounded-full transition-all duration-500 ease-out" style="width: 10%"></div>
+                </div>
+            </div>
+
+            <!-- Question Card -->
+            <div id="question-container-card" class="bg-white rounded-2xl p-6 md:p-8 shadow-md border border-slate-200/90 space-y-6 relative">
+                
+                <!-- Topic Tag & Hint Trigger -->
+                <div class="flex items-center justify-between border-b border-slate-100 pb-4">
+                    <span id="question-topic" class="text-xs font-bold uppercase tracking-wider text-brand-600 bg-brand-50 px-3 py-1 rounded-full border border-brand-100">
+                        נושא השאלה
+                    </span>
+
+                    <button id="hint-btn" onclick="toggleHint()" class="flex items-center gap-1.5 text-xs md:text-sm font-medium text-amber-700 bg-amber-50 hover:bg-amber-100 border border-amber-200/70 px-3 py-1.5 rounded-lg transition">
+                        <svg class="w-4 h-4 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"></path>
+                        </svg>
+                        <span>קבל רמז</span>
+                    </button>
+                </div>
+
+                <!-- Question Text -->
+                <div class="space-y-3">
+                    <h3 id="question-text" class="text-lg md:text-xl font-bold text-slate-900 leading-relaxed">
+                        טוען שאלה...
+                    </h3>
+                </div>
+
+                <!-- Collapsible Hint Box -->
+                <div id="hint-box" class="hidden bg-amber-50/90 border border-amber-200 rounded-xl p-4 text-xs md:text-sm text-amber-900 space-y-1 animate-fade-in">
+                    <div class="font-bold flex items-center gap-1.5 text-amber-800">
+                        <span>💡 רמז לפתרון:</span>
+                    </div>
+                    <div id="hint-text" class="leading-relaxed">
+                        ...
+                    </div>
+                </div>
+
+                <!-- Answer Options Grid -->
+                <div id="options-container" class="grid grid-cols-1 gap-3 pt-2">
+                    <!-- Dynamic Answer Buttons Inserted Here -->
+                </div>
+
+                <!-- Solution & Explanation Box (Appears after answer selection) -->
+                <div id="solution-box" class="hidden rounded-xl p-4 md:p-5 border transition-all duration-300 space-y-2">
+                    <div class="flex items-center gap-2 font-bold text-sm md:text-base" id="solution-header">
+                        <!-- Correct/Incorrect Badge -->
+                    </div>
+                    <div id="solution-text" class="text-xs md:text-sm text-slate-700 leading-relaxed border-t pt-2 border-slate-200/60">
+                        <!-- Solution detail -->
+                    </div>
+                </div>
+
+                <!-- Action Footer -->
+                <div class="flex items-center justify-between pt-4 border-t border-slate-100 gap-3">
+                    <button id="check-btn" onclick="checkAnswer()" disabled class="px-6 py-2.5 bg-slate-800 text-white font-medium text-sm rounded-xl opacity-40 cursor-not-allowed hover:bg-slate-900 transition flex items-center gap-2 shadow-sm">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                        </svg>
+                        <span>בדיקה</span>
+                    </button>
+
+                    <button id="next-btn" onclick="nextQuestion()" disabled class="px-6 py-2.5 bg-brand-600 text-white font-medium text-sm rounded-xl opacity-40 cursor-not-allowed hover:bg-brand-700 transition flex items-center gap-2 shadow-sm">
+                        <span>לשאלה הבאה</span>
+                        <svg class="w-4 h-4 rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path>
+                        </svg>
+                    </button>
+                </div>
+
+            </div>
+        </div>
+
+        <!-- SUMMARY / RESULTS CARD (Hidden initially) -->
+        <div id="summary-card" class="hidden bg-white rounded-2xl p-6 md:p-10 shadow-xl border border-slate-200/80 space-y-8 text-center">
+            
+            <div class="space-y-3">
+                <div id="score-badge-circle" class="w-28 h-28 rounded-full bg-brand-50 border-4 border-brand-500 text-brand-700 flex flex-col items-center justify-center mx-auto shadow-inner">
+                    <span id="final-score-percent" class="text-3xl font-extrabold leading-none">0%</span>
+                    <span class="text-xs text-slate-500 mt-1">ציון סופי</span>
+                </div>
+                
+                <h2 id="summary-title" class="text-2xl md:text-3xl font-bold text-slate-900">כל הכבוד! סיימת את המבדק</h2>
+                <p id="summary-feedback" class="text-slate-600 max-w-md mx-auto text-sm md:text-base leading-relaxed">
+                    להלן ניתוח הביצועים שלך במבדק הווקטורים.
+                </p>
+            </div>
+
+            <!-- Score Breakdown Stats -->
+            <div class="grid grid-cols-2 sm:grid-cols-3 gap-3 md:gap-4 text-right">
+                <div class="bg-slate-50 p-4 rounded-xl border border-slate-200/70">
+                    <span class="text-xs text-slate-500 block">תשובות נכונות</span>
+                    <span id="stat-correct" class="text-xl font-bold text-emerald-600">0 / 10</span>
+                </div>
+                <div class="bg-slate-50 p-4 rounded-xl border border-slate-200/70">
+                    <span class="text-xs text-slate-500 block">תשובות שגויות</span>
+                    <span id="stat-wrong" class="text-xl font-bold text-rose-600">0 / 10</span>
+                </div>
+                <div class="bg-slate-50 p-4 rounded-xl border border-slate-200/70 col-span-2 sm:col-span-1">
+                    <span class="text-xs text-slate-500 block">שימוש ברמזים</span>
+                    <span id="stat-hints" class="text-xl font-bold text-amber-600">0</span>
+                </div>
+            </div>
+
+            <!-- Question Review Breakdown -->
+            <div class="text-right space-y-3">
+                <h4 class="font-bold text-slate-900 text-base border-b pb-2">סיכום לפי שאלות:</h4>
+                <div id="review-list" class="space-y-2 max-h-60 overflow-y-auto pr-1">
+                    <!-- Dynamic review rows -->
+                </div>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="flex flex-col sm:flex-row gap-3 justify-center pt-2">
+                <button id="copy-submission-btn" onclick="copySubmission()" class="px-6 py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold rounded-xl shadow-lg shadow-emerald-500/20 transition flex items-center justify-center gap-2">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3"></path>
+                    </svg>
+                    <span>העתק הגשה</span>
+                </button>
+                <button onclick="restartQuiz()" class="px-8 py-3 bg-brand-600 hover:bg-brand-700 text-white font-semibold rounded-xl shadow-lg shadow-brand-500/25 transition">
+                    התחל מבדק מחדש
+                </button>
+            </div>
+
+        </div>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-white border-t border-slate-200 py-4 text-center text-xs text-slate-500">
+        <div class="max-w-4xl mx-auto px-4">
+            מבדק אינטראקטיבי במתמטיקה - ווקטורים | מותאם לתוכנית הלימודים בתיכון (4-5 יח"ל)
+        </div>
+    </footer>
+
+    <!-- Quiz Logic & Script -->
+    <script>
+        // Master Question Repository
+        const rawQuestions = [
+            {
+                id: 1,
+                topic: "חיבור, חיסור והצגה באמצעות ווקטורי יחידה",
+                question: "נתונים הווקטורים \\(\\vec{u} = 2\\vec{i} - 3\\vec{j} + \\vec{k}\\) ו- \\(\\vec{v} = -\\vec{i} + 4\\vec{j} - 2\\vec{k}\\). מהו הווקטור \\(2\\vec{u} - \\vec{v}\\)?",
+                options: [
+                    "\\(5\\vec{i} - 10\\vec{j} + 4\\vec{k}\\)",
+                    "\\(3\\vec{i} - 2\\vec{j} - 4\\vec{k}\\)",
+                    "\\(5\\vec{i} - 2\\vec{j}\\)",
+                    "\\(3\\vec{i} - 10\\vec{j} + 4\\vec{k}\\)"
+                ],
+                correctIndex: 0,
+                hint: "הכפל כל רכיב של \\(\\vec{u}\\) בסקלר \\(2\\), ולאחר מכן חסר בהתאמה את המקדמים של \\(\\vec{i}, \\vec{j}, \\vec{k}\\) בווקטור \\(\\vec{v}\\).",
+                explanation: "נחשב לפי רכיבים:<br>\\(2\\vec{u} = 4\\vec{i} - 6\\vec{j} + 2\\vec{k}\\)<br>\\(2\\vec{u} - \\vec{v} = (4 - (-1))\\vec{i} + (-6 - 4)\\vec{j} + (2 - (-2))\\vec{k} = 5\\vec{i} - 10\\vec{j} + 4\\vec{k}\\)."
+            },
+            {
+                id: 2,
+                topic: "אורך (גודל) של ווקטור במרחב",
+                question: "נתון הווקטור \\(\\vec{u} = (3, -4, 12)\\). מהו אורכו של הווקטור \\(|\\vec{u}|\\)?",
+                options: [
+                    "\\(13\\)",
+                    "\\(11\\)",
+                    "\\(15\\)",
+                    "\\(169\\)"
+                ],
+                correctIndex: 0,
+                hint: "אורך של ווקטור \\((x,y,z)\\) מחושב לפי הנוסחה: \\(|\\vec{u}| = \\sqrt{x^2 + y^2 + z^2}\\).",
+                explanation: "נציב את רכיבי הווקטור בנוסחת האורך:<br>\\(|\\vec{u}| = \\sqrt{3^2 + (-4)^2 + 12^2} = \\sqrt{9 + 16 + 144} = \\sqrt{169} = 13\\)."
+            },
+            {
+                id: 3,
+                topic: "מכפלה סקלרית",
+                question: "נתונים הווקטורים \\(\\vec{u} = (2, -1, 4)\\) ו- \\(\\vec{v} = (5, 3, -2)\\). מהו ערך המכפלה הסקלרית \\(\\vec{u} \\cdot \\vec{v}\\)?",
+                options: [
+                    "\\(-1\\)",
+                    "\\(15\\)",
+                    "\\(5\\)",
+                    "\\(19\\)"
+                ],
+                correctIndex: 0,
+                hint: "מכפלה סקלרית של ווקטורים היא סכום מכפלות הרכיבים המקבילים: \\(\\vec{u} \\cdot \\vec{v} = u_x v_x + u_y v_y + u_z v_z\\).",
+                explanation: "נחשב את המכפלה הסקלרית:<br>\\(\\vec{u} \\cdot \\vec{v} = (2)(5) + (-1)(3) + (4)(-2) = 10 - 3 - 8 = -1\\)."
+            },
+            {
+                id: 4,
+                topic: "תלות לינארית של ווקטורים",
+                question: "עבור איזה ערך של הפרמטר \\(m\\) הווקטורים \\(\\vec{u} = (2, -3, 4)\\) ו- \\(\\vec{v} = (-6, m, -12)\\) תלויים לינארית (מקבילים)?",
+                options: [
+                    "\\(m = 9\\)",
+                    "\\(m = -9\\)",
+                    "\\(m = 6\\)",
+                    "\\(m = -6\\)"
+                ],
+                correctIndex: 0,
+                hint: "שני ווקטורים תלויים לינארית אם ורק אם קיים סקלר \\(t\\) כך ש- \\(\\vec{v} = t \\cdot \\vec{u}\\), כלומר היחס בין הרכיבים המתאימים שווה.",
+                explanation: "נמצא את יחס הפרופורציה מרכיב ה-\\(x\\): \\(\\frac{-6}{2} = -3\\) (ובאופן זהה ב-\\(z\\): \\(\\frac{-12}{4} = -3\\)).<br>לכן נדרוש \\(m = (-3) \\cdot (-3) = 9\\)."
+            },
+            {
+                id: 5,
+                topic: "מאונכות (ניצבות) ווקטורים",
+                question: "עבור איזה ערך של הפרמטר \\(k\\) הווקטורים \\(\\vec{u} = (k, 3, -2)\\) ו- \\(\\vec{v} = (4, -2, k)\\) מאונכים זה לזה (\\(\\vec{u} \\perp \\vec{v}\\))?",
+                options: [
+                    "\\(k = 3\\)",
+                    "\\(k = -3\\)",
+                    "\\(k = 2\\)",
+                    "\\(k = 6\\)"
+                ],
+                correctIndex: 0,
+                hint: "שני ווקטורים שאינם ווקטור האפס מאונכים זה לזה אם ורק אם המכפלה הסקלרית שלהם שווה לאפס: \\(\\vec{u} \\cdot \\vec{v} = 0\\).",
+                explanation: "נדרוש מכפלה סקלרית אפס:<br>\\(k \\cdot 4 + 3 \\cdot (-2) + (-2) \\cdot k = 0 \\implies 4k - 6 - 2k = 0 \\implies 2k = 6 \\implies k = 3\\)."
+            },
+            {
+                id: 6,
+                topic: "זווית בין שני ווקטורים",
+                question: "מהי הזווית \\(\\alpha\\) בין הווקטורים \\(\\vec{u} = (1, 1, 0)\\) ו- \\(\\vec{v} = (0, 1, 1)\\)?",
+                options: [
+                    "\\(60^\\circ\\)",
+                    "\\(45^\\circ\\)",
+                    "\\(30^\\circ\\)",
+                    "\\(90^\\circ\\)"
+                ],
+                correctIndex: 0,
+                hint: "השתמש בנוסחה למציאת זווית בין ווקטורים: \\(\\cos\\alpha = \\frac{\\vec{u} \\cdot \\vec{v}}{|\\vec{u}| \\cdot |\\vec{v}|}\\).",
+                explanation: "1. נחשב מכפלה סקלרית: \\(\\vec{u} \\cdot \\vec{v} = 1\\cdot 0 + 1\\cdot 1 + 0\\cdot 1 = 1\\).<br>2. נחשב אורכים: \\(|\\vec{u}| = \\sqrt{2}\\), \\(|\\vec{v}| = \\sqrt{2}\\).<br>3. נציב בנוסחה: \\(\\cos\\alpha = \\frac{1}{\\sqrt{2} \\cdot \\sqrt{2}} = \\frac{1}{2} \\implies \\alpha = 60^\\circ\\)."
+            },
+            {
+                id: 7,
+                topic: "גיאומטריה של ווקטורים במקבילית",
+                question: "במקבילית \\(ABCD\\) נתונים הווקטורים \\(\\vec{AB} = \\vec{u}\\) ו- \\(\\vec{AD} = \\vec{v}\\). למה שווה הווקטור \\(\\vec{AC}\\) המייצג את אלכסון המקבילית?",
+                options: [
+                    "\\(\\vec{u} + \\vec{v}\\)",
+                    "\\(\\vec{u} - \\vec{v}\\)",
+                    "\\(\\vec{v} - \\vec{u}\\)",
+                    "\\(\\frac{1}{2}(\\vec{u} + \\vec{v})\\)"
+                ],
+                correctIndex: 0,
+                hint: "לפי חוק המקבילית בחיבור ווקטורים, האלכסון היוצא מקודקוד משותף שווה לסכום הווקטורים המייצגים את צלעות המקבילית.",
+                explanation: "במקבילית \\(ABCD\\), הצלע \\(\\vec{BC}\\) שווה ומקבילה ל-\\(\\vec{AD} = \\vec{v}\\).<br>לפי כלל חיבור ווקטורים במשולש \\(ABC\\): \\(\\vec{AC} = \\vec{AB} + \\vec{BC} = \\vec{u} + \\vec{v}\\)."
+            },
+            {
+                id: 8,
+                topic: "הצגה אלגברית של ווקטור בין שתי נקודות",
+                question: "נתונות הנקודות \\(A(1, 2, 3)\\) ו- \\(B(3, -1, 5)\\). מהי ההצגה האלגברית של הווקטור \\(\\vec{AB}\\)?",
+                options: [
+                    "\\((2, -3, 2)\\)",
+                    "\\((-2, 3, -2)\\)",
+                    "\\((4, 1, 8)\\)",
+                    "\\((3, -2, 15)\\)"
+                ],
+                correctIndex: 0,
+                hint: "הווקטור \\(\\vec{AB}\\) המתחיל בנקודה \\(A\\) ומסתיים בנקודה \\(B\\) מתקבל על ידי חיסור קואורדינטות: \\(B - A\\).",
+                explanation: "נחסר את שיעורי נקודת ההתחלה \\(A\\) משיעורי נקודת הסיום \\(B\\):<br>\\(\\vec{AB} = (3-1, -1-2, 5-3) = (2, -3, 2)\\)."
+            },
+            {
+                id: 9,
+                topic: "חלוקת קטע ביחס נתון",
+                question: "הנקודה \\(P\\) מחלקת את הקטע \\(AB\\) ביחס של \\(1:2\\) מ-\\(A\\) ל-\\(B\\). אם \\(\\vec{OA} = \\vec{a}\\) ו- \\(\\vec{OB} = \\vec{b}\\), למה שווה ווקטור המיקום \\(\\vec{OP}\\)?",
+                options: [
+                    "\\(\\frac{2}{3}\\vec{a} + \\frac{1}{3}\\vec{b}\\)",
+                    "\\(\\frac{1}{3}\\vec{a} + \\frac{2}{3}\\vec{b}\\)",
+                    "\\(\\frac{1}{2}\\vec{a} + \\frac{1}{2}\\vec{b}\\)",
+                    "\\(\\vec{a} + \\frac{1}{3}\\vec{b}\\)"
+                ],
+                correctIndex: 0,
+                hint: "השתמש בנוסחת חלוקת קטע ביחס \\(m:n\\): \\(\\vec{OP} = \\frac{n \\vec{a} + m \\vec{b}}{m+n}\\). כאן \\(m=1, n=2\\).",
+                explanation: "לפי כלל מסלול ווקטורי: \\(\\vec{OP} = \\vec{OA} + \\vec{AP} = \\vec{a} + \\frac{1}{3}\\vec{AB} = \\vec{a} + \\frac{1}{3}(\\vec{b} - \\vec{a}) = \\frac{2}{3}\\vec{a} + \\frac{1}{3}\\vec{b}\\)."
+            },
+            {
+                id: 10,
+                topic: "הצגה אלגברית של מישור במרחב",
+                question: "נתון מישור העובר דרך ראשית הצירים \\(O(0,0,0)\\) וניצב לווקטור \\(\\vec{n} = (3, -2, 5)\\). מהי משוואת המישור?",
+                options: [
+                    "\\(3x - 2y + 5z = 0\\)",
+                    "\\(3x + 2y - 5z = 0\\)",
+                    "\\(5x - 2y + 3z = 0\\)",
+                    "\\(\\frac{x}{3} - \\frac{y}{2} + \\frac{z}{5} = 0\\)"
+                ],
+                correctIndex: 0,
+                hint: "משוואת מישור עם ווקטור אנך \\(\\vec{n} = (a,b,c)\\) היא מהצורה \\(ax + by + cz + d = 0\\). מכיוון שהמישור עובר בראשית, \\(d = 0\\).",
+                explanation: "המקדמים של \\(x, y, z\\) במשוואת המישור הם בדיוק רכיבי ווקטור האנך \\((a,b,c) = (3,-2,5)\\).<br>מכיוון שהמישור עובר ב- \\((0,0,0)\\), האיבר החופשי \\(d=0\\), ולכן המשוואה היא \\(3x - 2y + 5z = 0\\)."
+            }
+        ];
+
+        // State Variables
+        let questions = [];
+        let currentQuestionIndex = 0;
+        let selectedOptionIndex = null;
+        let isQuestionAnswered = false;
+        let score = 0;
+        let hintsUsedCount = 0;
+        let userAnswers = []; // records { questionId, selectedIndex, isCorrect, usedHint }
+
+        // DOM Elements
+        const welcomeCard = document.getElementById('welcome-card');
+        const quizCard = document.getElementById('quiz-card');
+        const summaryCard = document.getElementById('summary-card');
+        const questionContainerCard = document.getElementById('question-container-card');
+
+        const questionTopicEl = document.getElementById('question-topic');
+        const questionTextEl = document.getElementById('question-text');
+        const optionsContainerEl = document.getElementById('options-container');
+        const hintBtn = document.getElementById('hint-btn');
+        const hintBox = document.getElementById('hint-box');
+        const hintTextEl = document.getElementById('hint-text');
+        const solutionBox = document.getElementById('solution-box');
+        const solutionHeaderEl = document.getElementById('solution-header');
+        const solutionTextEl = document.getElementById('solution-text');
+        const checkBtn = document.getElementById('check-btn');
+        const nextBtn = document.getElementById('next-btn');
+
+        const scoreCounterEl = document.getElementById('score-counter');
+        const questionProgressTextEl = document.getElementById('question-progress-text');
+        const progressPercentEl = document.getElementById('progress-percent');
+        const progressBarFillEl = document.getElementById('progress-bar-fill');
+
+        // Helper to trigger KaTeX render safely
+        function renderMath() {
+            if (window.renderMathInElement) {
+                renderMathInElement(document.body, {
+                    delimiters: [
+                        {left: "$$", right: "$$", display: true},
+                        {left: "\\(", right: "\\)", display: false},
+                        {left: "$", right: "$", display: false}
+                    ],
+                    throwOnError: false
+                });
+            }
+        }
+
+        // Shuffle Array (Fisher-Yates)
+        function shuffleArray(array) {
+            const arr = [...array];
+            for (let i = arr.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [arr[i], arr[j]] = [arr[j], arr[i]];
+            }
+            return arr;
+        }
+
+        // Start Quiz Procedure
+        function startQuiz() {
+            // Clone & Shuffle Questions and Options
+            questions = rawQuestions.map(q => {
+                // Shuffle options for each question
+                const optionsWithOriginalIndex = q.options.map((opt, idx) => ({
+                    text: opt,
+                    isCorrect: idx === q.correctIndex
+                }));
+                const shuffledOptions = shuffleArray(optionsWithOriginalIndex);
+
+                return {
+                    ...q,
+                    shuffledOptions: shuffledOptions
+                };
+            });
+            questions = shuffleArray(questions);
+
+            currentQuestionIndex = 0;
+            score = 0;
+            hintsUsedCount = 0;
+            userAnswers = [];
+
+            scoreCounterEl.textContent = "0";
+            welcomeCard.classList.add('hidden');
+            summaryCard.classList.add('hidden');
+            quizCard.classList.remove('hidden');
+
+            loadQuestion();
+        }
+
+        // Load Current Question
+        function loadQuestion() {
+            const q = questions[currentQuestionIndex];
+            selectedOptionIndex = null;
+            isQuestionAnswered = false;
+
+            // Trigger smooth card entry animation
+            questionContainerCard.classList.remove('animate-question-enter');
+            void questionContainerCard.offsetWidth; // Force reflow
+            questionContainerCard.classList.add('animate-question-enter');
+
+            // Reset UI States
+            hintBox.classList.add('hidden');
+            solutionBox.classList.add('hidden');
+            solutionBox.className = "hidden rounded-xl p-4 md:p-5 border transition-all duration-300 space-y-2";
+            
+            checkBtn.disabled = true;
+            checkBtn.classList.add('opacity-40', 'cursor-not-allowed');
+            checkBtn.classList.remove('hidden');
+
+            nextBtn.disabled = true;
+            nextBtn.classList.add('opacity-40', 'cursor-not-allowed');
+            
+            hintBtn.disabled = false;
+            hintBtn.classList.remove('opacity-40', 'cursor-not-allowed');
+
+            // Update Progress & Badges
+            questionTopicEl.textContent = q.topic;
+            questionTextEl.innerHTML = q.question;
+            hintTextEl.innerHTML = q.hint;
+            
+            const currentNum = currentQuestionIndex + 1;
+            const totalNum = questions.length;
+            const percent = Math.round((currentNum / totalNum) * 100);
+
+            questionProgressTextEl.textContent = `שאלה ${currentNum} מתוך ${totalNum}`;
+            progressPercentEl.textContent = `${percent}%`;
+            progressBarFillEl.style.width = `${percent}%`;
+
+            // Populate Options
+            optionsContainerEl.innerHTML = '';
+            const optionPrefixes = ['א', 'ב', 'ג', 'ד'];
+
+            q.shuffledOptions.forEach((opt, index) => {
+                const btn = document.createElement('button');
+                btn.className = `option-btn w-full text-right p-4 rounded-xl border border-slate-200 bg-slate-50/70 hover:bg-brand-50 hover:border-brand-300 flex items-center justify-between gap-3 group transition`;
+                btn.onclick = () => selectOption(index);
+
+                btn.innerHTML = `
+                    <div class="flex items-center gap-3 w-full">
+                        <span class="prefix-badge w-7 h-7 rounded-lg bg-white border border-slate-300 text-slate-700 font-semibold text-xs flex items-center justify-center shrink-0 group-hover:border-brand-500 group-hover:bg-brand-500 group-hover:text-white transition">
+                            ${optionPrefixes[index]}
+                        </span>
+                        <span class="text-slate-800 text-sm md:text-base font-medium">${opt.text}</span>
+                    </div>
+                    <div class="indicator-icon shrink-0"></div>
+                `;
+
+                optionsContainerEl.appendChild(btn);
+            });
+
+            // Trigger Math rendering
+            setTimeout(renderMath, 20);
+        }
+
+        // Toggle Hint Visibility
+        function toggleHint() {
+            const isHidden = hintBox.classList.contains('hidden');
+            if (isHidden) {
+                hintBox.classList.remove('hidden');
+                if (!userAnswers[currentQuestionIndex]) {
+                    userAnswers[currentQuestionIndex] = { hintUsed: true };
+                    hintsUsedCount++;
+                } else if (!userAnswers[currentQuestionIndex].hintUsed) {
+                    userAnswers[currentQuestionIndex].hintUsed = true;
+                    hintsUsedCount++;
+                }
+                setTimeout(renderMath, 10);
+            } else {
+                hintBox.classList.add('hidden');
+            }
+        }
+
+        // Select an Option (Before Verification)
+        function selectOption(index) {
+            if (isQuestionAnswered) return;
+            selectedOptionIndex = index;
+
+            const optionButtons = optionsContainerEl.querySelectorAll('.option-btn');
+            optionButtons.forEach((btn, idx) => {
+                const badge = btn.querySelector('.prefix-badge');
+                if (idx === index) {
+                    btn.classList.remove('border-slate-200', 'bg-slate-50/70');
+                    btn.classList.add('border-brand-500', 'bg-brand-50', 'ring-2', 'ring-brand-500/30');
+                    badge.classList.remove('bg-white', 'border-slate-300', 'text-slate-700');
+                    badge.classList.add('bg-brand-600', 'border-brand-600', 'text-white');
+                } else {
+                    btn.classList.add('border-slate-200', 'bg-slate-50/70');
+                    btn.classList.remove('border-brand-500', 'bg-brand-50', 'ring-2', 'ring-brand-500/30');
+                    badge.classList.add('bg-white', 'border-slate-300', 'text-slate-700');
+                    badge.classList.remove('bg-brand-600', 'border-brand-600', 'text-white');
+                }
+            });
+
+            checkBtn.disabled = false;
+            checkBtn.classList.remove('opacity-40', 'cursor-not-allowed');
+        }
+
+        // Verify Selected Answer
+        function checkAnswer() {
+            if (selectedOptionIndex === null || isQuestionAnswered) return;
+            isQuestionAnswered = true;
+
+            const q = questions[currentQuestionIndex];
+            const isCorrect = q.shuffledOptions[selectedOptionIndex].isCorrect;
+            const optionButtons = optionsContainerEl.querySelectorAll('.option-btn');
+
+            if (isCorrect) {
+                score += 10;
+                scoreCounterEl.textContent = score;
+            }
+
+            const existingHintUsed = userAnswers[currentQuestionIndex]?.hintUsed || false;
+            userAnswers[currentQuestionIndex] = {
+                questionId: q.id,
+                topic: q.topic,
+                isCorrect: isCorrect,
+                hintUsed: existingHintUsed
+            };
+
+            optionButtons.forEach((btn, idx) => {
+                btn.disabled = true;
+                btn.classList.remove('ring-2', 'ring-brand-500/30', 'hover:bg-brand-50', 'hover:border-brand-300');
+                const opt = q.shuffledOptions[idx];
+                const indicator = btn.querySelector('.indicator-icon');
+                const badge = btn.querySelector('.prefix-badge');
+
+                if (opt.isCorrect) {
+                    btn.classList.remove('border-slate-200', 'bg-slate-50/70', 'border-brand-500', 'bg-brand-50');
+                    btn.classList.add('border-emerald-500', 'bg-emerald-50', 'text-emerald-900');
+                    badge.classList.remove('bg-white', 'border-slate-300', 'text-slate-700', 'bg-brand-600', 'border-brand-600');
+                    badge.classList.add('bg-emerald-600', 'border-emerald-600', 'text-white');
+                    indicator.innerHTML = `<span class="text-emerald-600 font-bold text-lg">✓</span>`;
+                } else if (idx === selectedOptionIndex && !isCorrect) {
+                    btn.classList.remove('border-slate-200', 'bg-slate-50/70', 'border-brand-500', 'bg-brand-50');
+                    btn.classList.add('border-rose-500', 'bg-rose-50', 'text-rose-900');
+                    badge.classList.remove('bg-white', 'border-slate-300', 'text-slate-700', 'bg-brand-600', 'border-brand-600');
+                    badge.classList.add('bg-rose-600', 'border-rose-600', 'text-white');
+                    indicator.innerHTML = `<span class="text-rose-600 font-bold text-lg">✗</span>`;
+                } else {
+                    btn.classList.add('opacity-60');
+                }
+            });
+
+            // Show Solution Box
+            solutionBox.classList.remove('hidden');
+            if (isCorrect) {
+                solutionBox.classList.add('bg-emerald-50/70', 'border-emerald-200');
+                solutionHeaderEl.innerHTML = `<span class="text-emerald-700">🎉 תשובה נכונה! כל הכבוד.</span>`;
+            } else {
+                solutionBox.classList.add('bg-rose-50/70', 'border-rose-200');
+                solutionHeaderEl.innerHTML = `<span class="text-rose-700">❌ תשובה שגויה. להלן דרך הפתרון:</span>`;
+            }
+            solutionTextEl.innerHTML = q.explanation;
+
+            // Update Action Buttons
+            checkBtn.classList.add('hidden');
+            nextBtn.disabled = false;
+            nextBtn.classList.remove('opacity-40', 'cursor-not-allowed');
+            if (currentQuestionIndex === questions.length - 1) {
+                nextBtn.querySelector('span').textContent = 'סיים מבדק וצפה בתוצאות';
+            } else {
+                nextBtn.querySelector('span').textContent = 'לשאלה הבאה';
+            }
+
+            setTimeout(renderMath, 20);
+        }
+
+        // Advance to Next Question or Summary
+        function nextQuestion() {
+            if (currentQuestionIndex < questions.length - 1) {
+                currentQuestionIndex++;
+                loadQuestion();
+            } else {
+                showSummary();
+            }
+        }
+
+        // Display Final Summary Screen
+        function showSummary() {
+            quizCard.classList.add('hidden');
+            summaryCard.classList.remove('hidden');
+
+            const totalQuestions = questions.length;
+            const correctCount = userAnswers.filter(a => a && a.isCorrect).length;
+            const wrongCount = totalQuestions - correctCount;
+            const scorePercent = Math.round((correctCount / totalQuestions) * 100);
+
+            document.getElementById('final-score-percent').textContent = `${scorePercent}%`;
+            document.getElementById('stat-correct').textContent = `${correctCount} / ${totalQuestions}`;
+            document.getElementById('stat-wrong').textContent = `${wrongCount} / ${totalQuestions}`;
+            document.getElementById('stat-hints').textContent = hintsUsedCount;
+
+            const scoreCircle = document.getElementById('score-badge-circle');
+            const summaryTitle = document.getElementById('summary-title');
+            const summaryFeedback = document.getElementById('summary-feedback');
+
+            if (scorePercent >= 85) {
+                scoreCircle.className = "w-28 h-28 rounded-full bg-emerald-50 border-4 border-emerald-500 text-emerald-700 flex flex-col items-center justify-center mx-auto shadow-inner";
+                summaryTitle.textContent = "מצוין! שליטה מרשימה בווקטורים";
+                summaryFeedback.textContent = "הפגנת הבנה עמוקה של המושגים, הנוסחאות והחישובים הווקטוריים.";
+            } else if (scorePercent >= 60) {
+                scoreCircle.className = "w-28 h-28 rounded-full bg-brand-50 border-4 border-brand-500 text-brand-700 flex flex-col items-center justify-center mx-auto shadow-inner";
+                summaryTitle.textContent = "עבודה טובה! אתה בדרך הנכונה";
+                summaryFeedback.textContent = "יש לך בסיס טוב בנושא, כדאי לחזור על השאלות שבהן טעית כדי לחדד את השליטה.";
+            } else {
+                scoreCircle.className = "w-28 h-28 rounded-full bg-amber-50 border-4 border-amber-500 text-amber-700 flex flex-col items-center justify-center mx-auto shadow-inner";
+                summaryTitle.textContent = "כדאי לתרגל עוד קצת";
+                summaryFeedback.textContent = "מומלץ לעבור שוב על נוסחאות היסוד (מכפלה סקלרית, אורך וניצבות) ולנסות את המבדק שוב.";
+            }
+
+            const reviewList = document.getElementById('review-list');
+            reviewList.innerHTML = '';
+
+            userAnswers.forEach((ans, idx) => {
+                const row = document.createElement('div');
+                const isCorrect = ans && ans.isCorrect;
+                row.className = `flex items-center justify-between p-3 rounded-xl border text-xs md:text-sm ${
+                    isCorrect ? 'bg-emerald-50/50 border-emerald-200/70' : 'bg-rose-50/50 border-rose-200/70'
+                }`;
+
+                row.innerHTML = `
+                    <div class="flex items-center gap-2.5">
+                        <span class="w-6 h-6 rounded-full flex items-center justify-center font-bold text-white text-xs ${
+                            isCorrect ? 'bg-emerald-500' : 'bg-rose-500'
+                        }">
+                            ${isCorrect ? '✓' : '✗'}
+                        </span>
+                        <span class="font-medium text-slate-800">שאלה ${idx + 1}: ${ans ? ans.topic : ''}</span>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        ${ans && ans.hintUsed ? '<span class="text-xs bg-amber-100 text-amber-800 px-2 py-0.5 rounded-md font-medium">💡 רמז</span>' : ''}
+                        <span class="font-bold ${isCorrect ? 'text-emerald-700' : 'text-rose-700'}">
+                            ${isCorrect ? 'נכון' : 'שגוי'}
+                        </span>
+                    </div>
+                `;
+                reviewList.appendChild(row);
+            });
+        }
+
+        // Copy Submission Report to Clipboard
+        function copySubmission() {
+            const totalQuestions = questions.length;
+            const correctCount = userAnswers.filter(a => a && a.isCorrect).length;
+            const scorePercent = Math.round((correctCount / totalQuestions) * 100);
+            const now = new Date().toLocaleString('he-IL', { dateStyle: 'short', timeStyle: 'short' });
+
+            let report = `📋 סיכום הגשת מבדק במתמטיקה: ווקטורים\n`;
+            report += `תאריך ושעה: ${now}\n`;
+            report += `ציון סופי: ${scorePercent}% (${correctCount} מתוך ${totalQuestions} תשובות נכונות)\n`;
+            report += `שימוש ברמזים: ${hintsUsedCount}\n`;
+            report += `------------------------------\n`;
+            report += `פירוט לפי שאלות:\n`;
+
+            userAnswers.forEach((ans, idx) => {
+                const status = ans && ans.isCorrect ? '✓ נכון' : '✗ שגוי';
+                const hintNote = ans && ans.hintUsed ? ' (נעזר ברמז)' : '';
+                report += `${idx + 1}. ${ans ? ans.topic : ''} - ${status}${hintNote}\n`;
+            });
+
+            // Copy using fallback textarea + execCommand for reliable iFrame support
+            const textarea = document.createElement('textarea');
+            textarea.value = report;
+            textarea.style.position = 'fixed';
+            textarea.style.opacity = '0';
+            document.body.appendChild(textarea);
+            textarea.select();
+
+            try {
+                document.execCommand('copy');
+                const copyBtn = document.getElementById('copy-submission-btn');
+                const originalHTML = copyBtn.innerHTML;
+                copyBtn.innerHTML = `
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"></path>
+                    </svg>
+                    <span>ההגשה הועתקה!</span>
+                `;
+                copyBtn.classList.remove('bg-emerald-600', 'hover:bg-emerald-700');
+                copyBtn.classList.add('bg-slate-800', 'hover:bg-slate-900');
+
+                setTimeout(() => {
+                    copyBtn.innerHTML = originalHTML;
+                    copyBtn.classList.remove('bg-slate-800', 'hover:bg-slate-900');
+                    copyBtn.classList.add('bg-emerald-600', 'hover:bg-emerald-700');
+                }, 2500);
+            } catch (err) {
+                console.error('Failed to copy text:', err);
+            } finally {
+                document.body.removeChild(textarea);
+            }
+        }
+
+        // Restart Quiz
+        function restartQuiz() {
+            startQuiz();
+        }
+
+        // Initial Math Render on Window Load
+        window.addEventListener('load', () => {
+            renderMath();
+        });
+    </script>
+</body>
+</html>
